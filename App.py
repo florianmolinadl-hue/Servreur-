@@ -16,3 +16,4 @@ def send():
     msg = request.json["msg"]
     messages.append(coder(msg))
     return "ok"
+    SERVER = "https://chat-abc123.onrender.com"

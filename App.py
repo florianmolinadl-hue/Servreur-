@@ -16,12 +16,3 @@ def send():
     msg = request.json["msg"]
     messages.append(coder(msg))
     return "ok"
-
-@app.route("/get", methods=["GET"])
-def get():
-    return jsonify(messages)
-
-app.run(host="0.0.0.0", port=5000)
-@app.route("/")
-def home():
-    return "Serveur OK 🚀"

@@ -1,16 +1,9 @@
-from flask import Flask, request, jsonify
-import os
+from flask import Flask, request, jsonify, send_file
 
 app = Flask(__name__)
 
 messages = []
-
-alphabet = "abcdefghijklmnopqrstuvwxyz"
-cle = "qazwsxedcrfvtgbyhnujmikolp"
-mapping = dict(zip(alphabet, cle))
-
-def coder(msg):
-    return "".join(mapping.get(c, c) for c in msg.lower())
+voices = []
 
 @app.route("/")
 def home():
@@ -19,24 +12,28 @@ def home():
 @app.route("/send", methods=["POST"])
 def send():
     msg = request.json["msg"]
-    messages.append(coder(msg))
+    messages.append(msg)
     return "ok"
 
-@app.route("/get", methods=["GET"])
-def get():voices = []
+@app.route("/get")
+def get():
+    return jsonify(messages)
 
 @app.route("/voice", methods=["POST"])
 def voice():
-    file = request.files["file"]
-    filename = f"voice_{len(voices)}.wav"
-    file.save(filename)
-    voices.append(filename)
+    f = request.files["file"]
+    name = f"voice_{len(voices)}.wav"
+    f.save(name)
+    voices.append(name)
     return "ok"
 
-@app.route("/voices", methods=["GET"])
+@app.route("/voices")
 def get_voices():
     return jsonify(voices)
-    return jsonify(messages)
+
+@app.route("/<file>")
+def files(file):
+    return send_file(file)
 
 if __name__ == "__main__":
     app.run()

@@ -4,28 +4,23 @@ app = Flask(__name__)
 
 messages = []
 
-# 🏠 test serveur
 @app.route("/")
 def home():
     return "Serveur OK 🚀"
 
-# 📤 envoyer message
 @app.route("/send", methods=["POST"])
 def send():
-    data = request.json
-
-    if not data or "msg" not in data:
+    try:
+        msg = request.json["msg"]
+        messages.append(msg)
+        return "ok"
+    except:
         return "error", 400
 
-    messages.append(data["msg"])
-    return "ok"
-
-# 📥 récupérer messages
 @app.route("/get")
 def get():
     return jsonify(messages)
 
-
-# 🚀 LANCEMENT (important pour Render)
+# IMPORTANT RENDER
 if __name__ == "__main__":
-    app.run()
+    app.run(host="0.0.0.0", port=5000)

@@ -1,1 +1,12 @@
 flask
+from flask import request
+
+voices = []
+
+@app.route("/voice", methods=["POST"])
+def voice():
+    file = request.files["file"]
+    filename = file.filename
+    file.save(filename)
+    voices.append(filename)
+    return "ok"

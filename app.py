@@ -23,7 +23,19 @@ def send():
     return "ok"
 
 @app.route("/get", methods=["GET"])
-def get():
+def get():voices = []
+
+@app.route("/voice", methods=["POST"])
+def voice():
+    file = request.files["file"]
+    filename = f"voice_{len(voices)}.wav"
+    file.save(filename)
+    voices.append(filename)
+    return "ok"
+
+@app.route("/voices", methods=["GET"])
+def get_voices():
+    return jsonify(voices)
     return jsonify(messages)
 
 if __name__ == "__main__":

@@ -26,10 +26,15 @@ def send():
         save(msg)
     return "ok"
 
-
 @app.route("/get")
 def get():
     return jsonify(load())
+    @app.route("/upload", methods=["POST"])
+def upload():
+    file = request.files['file']
+    file.save("audio.wav")
+    messages.append("AUDIO")
+    return "ok"
 
 
 if __name__ == "__main__":

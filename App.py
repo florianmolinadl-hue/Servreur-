@@ -1,55 +1,74 @@
-from flask import Flask, request, jsonify, send_from_directory
+
+from flask import Flask, request, send_from_directory
 import os
 
 app = Flask(__name__)
 
-# 📁 dossier pour stocker les audios
-UPLOAD_FOLDER = "uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
 messages = []
 
+UPLOAD_FOLDER = "uploads"
 
-# 💬 envoyer message texte
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+# 💬 ENVOI MESSAGE
 @app.route("/send", methods=["POST"])
 def send():
-    data = request.get_json()
-    msg = data.get("msg", "")
+
+    data = request.json
+
+    msg = data["msg"]
+
     messages.append(msg)
-    return "ok"
+
+    return {"ok": True}
 
 
-# 📥 récupérer messages
-@app.route("/get", methods=["GET"])
+# 💬 RÉCUPÉRATION
+@app.route("/get")
 def get():
-    return jsonify(messages)
+
+    return messages
 
 
-# 🎤 upload audio
+# 📎 UPLOAD FICHIER
 @app.route("/upload", methods=["POST"])
 def upload():
-    file = request.files.get("file")
 
-    if not file:
-        return "no file", 400
+    file = request.files["file"]
 
     filename = file.filename
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
 
-    file.save(filepath)
+    path = os.path.join(
+        UPLOAD_FOLDER,
+        filename
+    )
 
-    # on envoie le nom du fichier au chat
-    messages.append("AUDIO:" + filename)
+    file.save(path)
 
-    return "ok"
+    user = request.form.get("user")
+
+    messages.append(
+        f"{user}:📎 {filename}"
+    )
+
+    return {"ok": True}
 
 
-# 🎧 récupérer audio
-@app.route("/audio/<filename>")
-def get_audio(filename):
-    return send_from_directory(UPLOAD_FOLDER, filename)
+# 📥 DOWNLOAD
+@app.route("/files/<filename>")
+def files(filename):
+
+    return send_from_directory(
+        UPLOAD_FOLDER,
+        filename
+    )
 
 
-# 🚀 lancement
+# 🚀 START
 if __name__ == "__main__":
-    app
+
+    app.run(
+        host="0.0.0.0",
+        port=5000
+    )

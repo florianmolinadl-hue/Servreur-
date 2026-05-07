@@ -64,7 +64,36 @@ def files(filename):
         filename
     )
 
+@app.route("/upload", methods=["POST"])
+def upload():
 
+    file = request.files["file"]
+
+    filename = file.filename
+
+    path = os.path.join(
+        UPLOAD_FOLDER,
+        filename
+    )
+
+    file.save(path)
+
+    user = request.form.get("user")
+
+    messages.append(
+        f"{user}:📎 {filename}"
+    )
+
+    return {"ok": True}
+
+
+@app.route("/files/<filename>")
+def files(filename):
+
+    return send_from_directory(
+        UPLOAD_FOLDER,
+        filename
+    )
 # 🚀 START
 if __name__ == "__main__":
 

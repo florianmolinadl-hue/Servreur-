@@ -1,103 +1,55 @@
-
-from flask import Flask, request, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory
 import os
 
 app = Flask(__name__)
 
-messages = []
-
+# 📁 dossier pour stocker les audios
 UPLOAD_FOLDER = "uploads"
-
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+messages = []
 
-# 💬 ENVOI MESSAGE
+
+# 💬 envoyer message texte
 @app.route("/send", methods=["POST"])
 def send():
-
-    data = request.json
-
-    msg = data["msg"]
-
+    data = request.get_json()
+    msg = data.get("msg", "")
     messages.append(msg)
+    return "ok"
 
-    return {"ok": True}
 
-
-# 💬 RÉCUPÉRATION
-@app.route("/get")
+# 📥 récupérer messages
+@app.route("/get", methods=["GET"])
 def get():
+    return jsonify(messages)
 
-    return messages
 
-
-# 📎 UPLOAD FICHIER
+# 🎤 upload audio
 @app.route("/upload", methods=["POST"])
 def upload():
+    file = request.files.get("file")
 
-    file = request.files["file"]
-
-    filename = file.filename
-
-    path = os.path.join(
-        UPLOAD_FOLDER,
-        filename
-    )
-
-    file.save(path)
-
-    user = request.form.get("user")
-
-    messages.append(
-        f"{user}:📎 {filename}"
-    )
-
-    return {"ok": True}
-
-
-# 📥 DOWNLOAD
-@app.route("/files/<filename>")
-def files(filename):
-
-    return send_from_directory(
-        UPLOAD_FOLDER,
-        filename
-    )
-
-@app.route("/upload", methods=["POST"])
-def upload():
-
-    file = request.files["file"]
+    if not file:
+        return "no file", 400
 
     filename = file.filename
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
 
-    path = os.path.join(
-        UPLOAD_FOLDER,
-        filename
-    )
+    file.save(filepath)
 
-    file.save(path)
+    # on envoie le nom du fichier au chat
+    messages.append("AUDIO:" + filename)
 
-    user = request.form.get("user")
-
-    messages.append(
-        f"{user}:📎 {filename}"
-    )
-
-    return {"ok": True}
+    return "ok"
 
 
-@app.route("/files/<filename>")
-def files(filename):
+# 🎧 récupérer audio
+@app.route("/audio/<filename>")
+def get_audio(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
-    return send_from_directory(
-        UPLOAD_FOLDER,
-        filename
-    )
-# 🚀 START
+
+# 🚀 lancement
 if __name__ == "__main__":
-
-    app.run(
-        host="0.0.0.0",
-        port=5000
-    )
+    app

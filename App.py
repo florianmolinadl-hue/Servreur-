@@ -1,55 +1,45 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import os
+import json
 
 app = Flask(__name__)
+CORS(app)
 
-# 📁 dossier pour stocker les audios
-UPLOAD_FOLDER = "uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+FILE = "messages.json"
 
-messages = []
+# 📦 Charger les messages
+def load_messages():
+    if os.path.exists(FILE):
+        with open(FILE, "r") as f:
+            return json.load(f)
+    return []
 
+# 💾 Sauvegarder
+def save_messages(msgs):
+    with open(FILE, "w") as f:
+        json.dump(msgs, f)
 
-# 💬 envoyer message texte
+# 📩 Envoyer un message
 @app.route("/send", methods=["POST"])
 def send():
-    data = request.get_json()
-    msg = data.get("msg", "")
+    data = request.json
+    msg = data.get("msg")
+
+    if not msg:
+        return jsonify({"error": "no msg"}), 400
+
+    messages = load_messages()
     messages.append(msg)
-    return "ok"
+    save_messages(messages)
 
+    return jsonify({"status": "ok"})
 
-# 📥 récupérer messages
+# 📥 Récupérer messages
 @app.route("/get", methods=["GET"])
 def get():
-    return jsonify(messages)
+    return jsonify(load_messages())
 
-
-# 🎤 upload audio
-@app.route("/upload", methods=["POST"])
-def upload():
-    file = request.files.get("file")
-
-    if not file:
-        return "no file", 400
-
-    filename = file.filename
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
-
-    file.save(filepath)
-
-    # on envoie le nom du fichier au chat
-    messages.append("AUDIO:" + filename)
-
-    return "ok"
-
-
-# 🎧 récupérer audio
-@app.route("/audio/<filename>")
-def get_audio(filename):
-    return send_from_directory(UPLOAD_FOLDER, filename)
-
-
-# 🚀 lancement
+# 🚀 Run local / Render
 if __name__ == "__main__":
-    app
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
